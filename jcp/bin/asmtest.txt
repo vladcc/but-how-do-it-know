@@ -1,0 +1,24 @@
+# ALU
+add r0, r1
+shr r0, r1#comment
+shl r0, r1
+not r0, r1 # comment
+and r0, r1
+or  r0, r1
+xor r0, r1
+cmp r0, r1
+
+# load/store
+ld r0, r1
+st r1, r2
+
+# data
+data r3, 0xAF
+
+# jumps
+jmpr r3
+jmp 0xFF
+jcaez 0xFE
+
+# clear the flags
+clf	
