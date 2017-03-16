@@ -10,18 +10,17 @@
 #include "jcpu.h"
 #include "mach_code.h"
 
-#define RA			0x0C
-#define RB			0x03
-#define BYTE_MAX	0xFF
-#define get_ra_ir() (GREG_OFF + ((regs[IR] & RA) >> 2))
-#define get_rb_ir() (GREG_OFF + (regs[IR] & RB))
-#define get_instr()	(regs[IR] >> 4)
-#define set_zf()	(regs[ZF] = (regs[rb] == 0))
+#define RA			0x0C	// & 0x0C for reg a
+#define RB			0x03	// & 0x03 for reg b
+#define BYTE_MAX	0xFF	// max byte value
+#define get_ra_ir() (GREG_OFF + ((regs[IR] & RA) >> 2))	// get the index of reg a from IR
+#define get_rb_ir() (GREG_OFF + (regs[IR] & RB))		// get the index of reg b from IR
+#define get_instr()	(regs[IR] >> 4)						// get instruction nibble
+#define set_zf()	(regs[ZF] = (regs[rb] == 0))		// set the zero flag
 
-byte ram[RAM_S] = {0x21};
-byte regs[NUM_REGS] = {0x00};
-fpvv_t * func_arr; // pointer to a function pointer
-int last_byte;
+byte ram[RAM_S] = {0x00};		// the ram
+byte regs[NUM_REGS] = {0x00};	// the registers
+fpvv_t * func_arr; 				// pointer to a function pointer
 
 static void load(void);
 static void store(void);
