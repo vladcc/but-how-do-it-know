@@ -41,6 +41,9 @@ static void cmp(void);
 
 void jcpu_load(const byte * code, int csize)
 {
+	/* initialize the function array
+	 * load the code in ram */
+
 	// an array of void function pointers
 	static fpvv_t fa[INSTR_COUNT] = {	
 		load, store,
