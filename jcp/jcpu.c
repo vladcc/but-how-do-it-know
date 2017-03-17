@@ -68,7 +68,7 @@ void jcpu_step(void)
 	/* CPU cycle */
 	/* 1. move IAR to MAR
 	 * 2. set IR to the value at the MAR address 
-	 * 3. add one to IAR *
+	 * 3. add one to IAR 
 	 * 4, 5, 6 execute instruction */		
 	regs[MAR] = regs[IAR];
 	regs[IR] = ram[regs[MAR]];

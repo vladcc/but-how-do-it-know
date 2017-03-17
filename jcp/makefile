@@ -76,3 +76,4 @@ clean:
 	$(RM) $(CMDIR)/*.$(OBJ)
 	$(RM) $(VMDIR)/*.$(OBJ)
 	$(RM) $(ASMDIR)/*.$(OBJ)
+	$(RM) $(DISDIR)/*.$(OBJ)

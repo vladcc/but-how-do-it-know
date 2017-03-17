@@ -1,5 +1,5 @@
 /* lexjcpa.h -- header file for the jcp assembler lexer */
-/* ver. 1.0 */
+/* ver. 1.1 */
 
 /* Defines used constants and declares public
  * functions. Provides a class-like interface. */
@@ -17,6 +17,7 @@
 typedef enum token_ {	
 		TOK_INSTR,
 		TOK_REGISTER,
+		TOK_LABEL,
 		TOK_LITERAL,
 		EOI,
 		ERR

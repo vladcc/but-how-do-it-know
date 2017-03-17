@@ -1,0 +1,10 @@
+add r0, r0
+jmp .jumphere
+jmp .jumphere
+data r2, 0xBB
+shr r1, r1
+jcaez .jumphere
+.jumphere:
+.jmpthere:
+#ja .nowhere
+jz .jumphere

@@ -1,5 +1,5 @@
 /* disasm.h -- the header for the disassembler engine */
-/* ver. 1.0 */
+/* ver. 1.01 */
 #ifndef DISASM_H
 #define DISASM_H
 // the byte type

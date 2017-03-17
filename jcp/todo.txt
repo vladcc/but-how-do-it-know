@@ -1,4 +1,3 @@
-add label support for the assembler
 implement a simple preprocessor
 implement the compiler
 write examples

@@ -1,5 +1,5 @@
 /* jcpasm.c -- assembler for the jcpu */
-/* ver. 1.0 */
+/* ver. 1.1 */
 
 /* Reads an assembly text file and outputs
  * the respective binary instructions for the jcpu. */
@@ -21,30 +21,52 @@
 #define OUTF		'o'		// output file follows
 #define VERS		'v'		// print version info
 #define HELP		'h'		// print help
+#define LBL_ADDR	':'		// if a label ends with ':', parse it as address mark
+#define LBL_JUMP	'j'		// if a label doesn't end with ':', parse it as a jump destination
+#define DEC_SEP		' '		// separates the label name and decoration number
+#define NUL			'\0'	// ascii null
 #define print_use()	printf("Use:  %s <in file> %c%c <out file>\n", exenm, DASH, OUTF)
 #define help_opt()	printf("Help: %s %c%c\n", exenm, DASH, HELP)
 
-const char * in_buff;		// input buffer pointer
+typedef struct label_ {
+	int address;			// the address at which the label was found
+	int lineno;				// the line number at which the label was found
+	char * lbl_str;			// points to the label string
+	char context;			// specifies address of target jump context
+	bool visited;			// specifies if it has been used or not
+} label;
+
+char * in_buff;				// input buffer pointer
 static byte binary[RAM_S];	// compiled code buffer
 static int all_size = 0;	// code buffer pointer
 CHTbl * instr_htbl;			// instruction hash table pointer
+CHTbl * lbls_htbl;			// label hash table pointer
 char exenm[] = "jcpasm";	// executable name
 char ver[] = "v1.0";		// executable version
 int curr_lineno = 0;
 
 // parser functions
 void parse_instr(void);
-void parse_address(void);
 int parse_register(void);
+void parse_label(char context);
+void parse_address(void);
+void eval_labels(void);
 void e_match(token tok);
 void print_ln_err(void);
 
 // hash table functions
-int compar(const void * key1, const void * key2);
-int hash(const void * key);
+int hash_inst(const void * key);
+int compar_inst(const void * key1, const void * key2);
+int hash_lbl(const void * key);
+int compar_lbl(const void * key1, const void * key2);
+label * make_lbl_node(char * lbl);
+void free_labels(void * lbl);
+void resolve_lbl_addr(ListElmt * l_element, void * args);
+void look_lone_lbls(ListElmt * l_element, void * args);
 
-// application functions
+// service functions
 FILE * efopen(const char * fname, const char * mode);
+void * emalloc(size_t nbytes);
 void print_help(void);
 void quit(void);
 
@@ -86,12 +108,15 @@ int main(int argc, char * argv[])
 	
 	char * fin, * fout;
 	static char curr_text[SUB_STR_SZ];
-	CHTbl instr_htbl_;
-	instr_htbl = &instr_htbl_;
+	CHTbl instr_htbl_, lbls_htbl_;
 	
-	if (chtbl_init(instr_htbl, BUCKETS, hash, compar, NULL) < 0)
+	instr_htbl = &instr_htbl_;
+	lbls_htbl = &lbls_htbl_;
+	
+	if ( (chtbl_init(instr_htbl, BUCKETS, hash_inst, compar_inst, NULL) < 0) ||
+		 (chtbl_init(lbls_htbl, BUCKETS, hash_lbl, compar_lbl, free_labels) < 0) )
 	{
-		fprintf(stderr, "Err: initializatoin failed\n");
+		fprintf(stderr, "Err: hash table initializatoin failed\n");
 		return -1;
 	}
 	
@@ -113,14 +138,22 @@ int main(int argc, char * argv[])
 		if (all_size > MAX_CODE)
 			break;
 	
-		if (ctok != ERR)
-			parse_instr();
-		else
+		switch (ctok)
 		{
-			fprintf(stderr, "Err: line %d: ", curr_lineno);
-			fprintf(stderr, "something not an instruction, address, or register < %s >\n",
-					in_buff);
-			quit();
+			case TOK_INSTR:
+				parse_instr();
+				break;
+			case TOK_LABEL:
+				/* called from here it parses labels outside of any instruction only
+				 * if a label is after a jump, parse_label() is called from parse_instr() */
+				parse_label(LBL_ADDR);
+				break;
+			default:
+				fprintf(stderr, "Err: line %d: ", curr_lineno);
+				fprintf(stderr, "something not an instruction, address, or register < %s >\n",
+						in_buff);
+				quit();
+				break;
 		}
 	}
 	
@@ -134,15 +167,21 @@ int main(int argc, char * argv[])
 		all_size = MAX_CODE;
 	}
 	
+	eval_labels();
+	
 	if (fwrite(binary , all_size, 1, output_file) != 1)
 		fprintf(stderr, "Err: output was not written properly\n");
 	
+	puts("Compilation complete");
+	
 	fclose(output_file);
 	fclose(input_file);
+	chtbl_destroy(lbls_htbl);
 	chtbl_destroy(instr_htbl);
 	return 0;
 }
 
+/* ---------------------------- PARSER FUNCTIONS START ----------------------------  */
 void parse_instr(void)
 {
 	/* translate instruction strings into binary code,
@@ -170,7 +209,12 @@ void parse_instr(void)
 			}
 		}
 		++all_size;
-		parse_address();
+		
+		if (Lexer.Current() == TOK_LITERAL)
+			parse_address();
+		else
+			parse_label(LBL_JUMP);
+		
 		++all_size;
 		return;
 	}
@@ -191,7 +235,10 @@ void parse_instr(void)
 				break;
 			case JMP:
 				++all_size;
-				parse_address();
+				if (Lexer.Current() == TOK_LITERAL)
+					parse_address();
+				else
+					parse_label(LBL_JUMP);
 				break;
 			case JMPR:
 				// get RB
@@ -222,29 +269,6 @@ void parse_instr(void)
 	return;
 }
 
-void parse_address(void)
-{
-	/* reads a literal decimal or hex number */
-	e_match(TOK_LITERAL);
-	
-	int addr_state;
-	unsigned int num;
-	if ('X' == in_buff[1])
-		addr_state = sscanf(in_buff, "%x", &num);
-	else
-		addr_state = sscanf(in_buff, "%d", &num);
-	
-	if (addr_state != 1 || num > 0xFF)
-	{
-		fprintf(stderr, "Err: line %d: invalid address < %s >\n", 
-				curr_lineno, in_buff);
-		quit();
-	}
-	
-	binary[all_size] = num;
-	return;
-}
-
 int parse_register(void)
 {
 	/* translates register mnemonics into binary */
@@ -269,30 +293,67 @@ regerr:
 	return -1; // we never come here
 }
 
-int hash(const void * key)
+void parse_label(char context)
 {
-	/* hash for alphabetical order */
-	return tolower(((instr *)key)->name[0]) - 'a';
-}
-
-int compar(const void * key1, const void * key2)
-{
-	/* for sorting and searching strings */
-	return strcmp((const char *)((instr *)key1)->name, ((instr *)key2)->name);
-}
-
-FILE * efopen(const char * fname, const char * mode)
-{
-	/* open a file or die with an error */
-	FILE * fp; 
+	/* validate and process a label */
+	e_match(TOK_LABEL);
 	
-	if ( (fp = fopen(fname, mode)) == NULL)
+	if (strlen(in_buff) < 3)
 	{
-		fprintf(stderr, "Err: could not open file \"%s\"\n", fname);
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "Err: line %d: bad label < %s >\n",
+				curr_lineno, in_buff);
+		quit();
 	}
 	
-	return fp;
+	label * curr_lbl = make_lbl_node(in_buff);
+	if (curr_lbl->context != context)
+	{
+		if (LBL_ADDR == curr_lbl->context)
+			fprintf(stderr, "Err: line %d: label < %s > should not end with '%c'\n", 
+					curr_lineno, in_buff ,LBL_ADDR);
+		else
+			fprintf(stderr, "Err: line %d: label < %s > should end with '%c'\n", 
+					curr_lineno, in_buff, LBL_ADDR);
+		quit();
+	}
+	
+	label * lblfound = curr_lbl;
+	if (LBL_ADDR == curr_lbl->context && 
+		chtbl_lookup(lbls_htbl, (void **)&lblfound) == 0)
+	{
+		lblfound = *(label **)lblfound;
+		
+		fprintf(stderr, "Err: line %d: duplicate labels < %s > on lines %d and %d\n",
+			curr_lineno, in_buff, lblfound->lineno, curr_lbl->lineno);
+		quit();
+	}
+	else
+		chtbl_insert(lbls_htbl, curr_lbl);
+	
+	return;
+}
+
+void parse_address(void)
+{
+	/* reads a literal decimal or hex number */
+	e_match(TOK_LITERAL);
+	
+	int addr_state;
+	unsigned int num;
+	if ('X' == in_buff[1])
+		addr_state = sscanf(in_buff, "%x", &num);
+	else
+		addr_state = sscanf(in_buff, "%d", &num);
+	
+	if (addr_state != 1 || num > 0xFF)
+	{
+		fprintf(stderr, "Err: line %d: invalid address < %s >\n", 
+				curr_lineno, in_buff);
+		quit();
+	}
+	
+	binary[all_size] = num;
+	return;
 }
 
 void e_match(token tok)
@@ -322,17 +383,196 @@ void print_ln_err(void)
 	int end = strlen(src_ln) - 1;
 	
 	if ('\n' == src_ln[end])
-		src_ln[end] = '\0';
+		src_ln[end] = NUL;
 		
 	fprintf(stderr, "%s\n", src_ln);
 	fprintf(stderr, "%*c\n", Lexer.GetErrPos(), '^');
 	
 	return;
 }
+/* ---------------------------- PARSER FUNCTIONS END ----------------------------  */
+
+/* ---------------------------- HASH TABLE FUNCTIONS START ----------------------------  */
+int hash_inst(const void * key)
+{
+	/* hash instructions in alphabetical order */
+	return tolower(((instr *)key)->name[0]) - 'a';
+}
+
+int compar_inst(const void * key1, const void * key2)
+{
+	/* for sorting and searching instructions */
+	return strcmp((const char *)((instr *)key1)->name, ((instr *)key2)->name);
+}
+
+int hash_lbl(const void * key)
+{
+	/* hash labels in alphabetical order */
+	return tolower(((label *)key)->lbl_str[1]) - 'a';
+}
+
+int compar_lbl(const void * key1, const void * key2)
+{
+	/* for sorting and searching labels */
+	return strcmp(&(((label *)key1)->lbl_str[1]), &(((label *)key2)->lbl_str[1]));
+}
+
+label * make_lbl_node(char * lbl)
+{
+	/* allocate memory for a new label structure
+	 * find out the context of the label
+	 * populate the structure */
+	int endl = strlen(lbl);
+	static int dec_lbl = 0;
+	static const int xtra_space = 10;
+	
+	label * newlbl = emalloc(sizeof(*newlbl));
+
+	newlbl->lbl_str = emalloc(endl + xtra_space);
+	strcpy(newlbl->lbl_str, lbl);
+	
+	--endl;
+	// check last character
+	if (LBL_ADDR != newlbl->lbl_str[endl])
+	{
+		newlbl->context = LBL_JUMP;
+
+		// decorate label with a number so we can remember them all
+		sprintf(newlbl->lbl_str, "%s%c%d", newlbl->lbl_str, DEC_SEP, dec_lbl);
+		++dec_lbl;
+	}
+	else
+		newlbl->context = LBL_ADDR;
+		
+	newlbl->address = all_size;
+	newlbl->lineno = curr_lineno;
+	newlbl->visited = false;
+	
+	return newlbl;
+}
+
+void free_labels(void * lbl)
+{
+	/* free the allocated string and
+	 * label memory */
+	free(((label *)lbl)->lbl_str);
+	free(lbl);
+	return;
+}
+
+void eval_labels(void)
+{
+	/* resolve every recorded label
+	 * check if any have been unused */
+	int i;
+	for (i = 0; i < BUCKETS; ++i)
+	{
+		if (lbls_htbl->table[i].head != NULL)
+			list_apply_all(&lbls_htbl->table[i], resolve_lbl_addr, NULL);
+	}
+	
+	// check for lone labels
+	for (i = 0; i < BUCKETS; ++i)
+	{
+		if (lbls_htbl->table[i].head != NULL)
+			list_apply_all(&lbls_htbl->table[i], look_lone_lbls, NULL);
+	}
+	
+	return;
+}
+
+void resolve_lbl_addr(ListElmt * l_element, void * args)
+{
+	/* go through all jump destination labels
+	 * remove decoration
+	 * search for corresponding address label */
+	label * lbl = (label *)l_element->data;
+	
+	if (LBL_ADDR == lbl->context)
+		return;
+	
+	label dummy_, * dum, * searchlbl;
+	dum = &dummy_;
+	dum->lbl_str = emalloc(strlen(lbl->lbl_str));
+	
+	strcpy(dum->lbl_str, lbl->lbl_str);
+	
+	// find decoration separator
+	int i = 1;
+	while (dum->lbl_str[i] != DEC_SEP)
+		++i;
+	
+	// make jump label into address label
+	dum->lbl_str[i++] = LBL_ADDR;
+	dum->lbl_str[i] = NUL;
+	
+	searchlbl = dum;
+	// search for address label
+	if (chtbl_lookup(lbls_htbl, (void **)&searchlbl) == 0)
+	{
+		searchlbl = *(label **)searchlbl;
+		
+		// resolve the address
+		binary[lbl->address] = searchlbl->address;
+	}
+	else
+	{
+		fprintf(stderr, "Err: line %d: target label < %s > doesn't exist\n",
+				lbl->lineno, dum->lbl_str);
+		quit();
+	}
+	lbl->visited = true;
+	searchlbl->visited = true;
+	
+	free(dum->lbl_str);
+	return;
+}
+
+void look_lone_lbls(ListElmt * l_element, void * args)
+{
+	/* let the user know if a label is left unused */
+	label * lbl = (label *)l_element->data;
+	
+	if (false == lbl->visited)
+		fprintf(stderr, "Warning: line %d: unused label < %s >\n",
+				lbl->lineno, lbl->lbl_str);
+	
+	return;
+}
+/* ---------------------------- HASH TABLE FUNCTIONS END ----------------------------  */
+
+/* ---------------------------- SERVICE FUNCTIONS START ----------------------------  */
+FILE * efopen(const char * fname, const char * mode)
+{
+	/* open a file or die with an error */
+	FILE * fp; 
+	
+	if ( (fp = fopen(fname, mode)) == NULL)
+	{
+		fprintf(stderr, "Err: could not open file \"%s\"\n", fname);
+		exit(EXIT_FAILURE);
+	}
+	
+	return fp;
+}
+
+void * emalloc(size_t nbytes)
+{
+	/* allocate memory or die with an error */
+	void * newmem;
+	
+	if ((newmem = malloc(nbytes)) == NULL)
+	{
+		fprintf(stderr, "Err: memory allocation failed\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	return newmem;
+}
 
 void print_help(void)
 {
-	/* print help */
+	/* show help */
 	printf("Compile: %s <input text file> %c%c <output binary file>\n", 
 			exenm, DASH, OUTF);
 	printf("Version: %s %c%c\n", exenm, DASH, VERS);
@@ -342,8 +582,9 @@ void print_help(void)
 
 void quit(void)
 {
-	/* go home */
+	/* hcf */
 	puts("Compilation aborted");
 	exit(EXIT_FAILURE);
 	return;
 }
+/* ---------------------------- SERVICE FUNCTIONS END ----------------------------  */

@@ -1,1 +1,17 @@
-ver 1.0 realease done
+display.c:
+
+ver. 1.01
+- added: The '*' character now marks the address to which MAR points.
+----------------------------------------------------------------------
+
+jexjcpa.c:
+
+ver. 1.1
+- added: Label parsing; labels must begin with a '.'
+----------------------------------------------------------------------
+
+jcpasm.c:
+
+ver. 1.1
+- added: Label support.
+----------------------------------------------------------------------
