@@ -1,5 +1,5 @@
 /* display.c -- provides display functionality for the jcpvm */
-/* ver. 1.0 */
+/* ver. 1.01 */
 
 /* Creates a frame buffer and fills it with what
  * represents the current machine state of the jcpu. 
@@ -7,6 +7,7 @@
 
 /* Author: Vladimir Dinev */
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "os_def.h"
 #include "display.h"
@@ -20,6 +21,8 @@
 #define CODE_LINE	20		// disassembled code begins at line index 20
 #define INSTR_NUM	4		// the number of disassembled instructions minus the last executed
 #define INSTR_MAX	256		// maximum number of instructions to disassemble
+#define MARK_IAR	'@'		// '@' marks the address pointed to by IAR
+#define MARK_MAR	'*'		// '*' marks the address pointed to by MAR
 
 char frame[FRAME_ROWS][FRAME_COLS];	// the frame buffer
 char ** disasm_str;					// a pointer to an array of strings; holds the disasm text
@@ -97,11 +100,18 @@ static void make_frame(int hex_dec, int last_instr)
 	do_code(last_instr);
 	do_regs(hex_dec);
 	
-	int row = regs[IAR] >> 4;
-	int col = regs[IAR] & 0x0F;
+	int row = regs[MAR] >> 4;
+	int col = regs[MAR] & 0x0F;
+	
+	// mark current ram address
+	frame[2 + row][2 + (4 * col) + 1] = MARK_MAR;
+	
+	row = regs[IAR] >> 4;
+	col = regs[IAR] & 0x0F;
 	
 	// mark current instruction address
-	frame[2 + row][2 + (4 * col) + 1] = '@';
+	frame[2 + row][2 + (4 * col) + 1] = MARK_IAR;
+	
 	return;
 }
 

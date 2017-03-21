@@ -1,1 +1,55 @@
-ver 1.0 realease done
+General
+
+18.03.17
+- The hash table and the list are moved in ./adt
+- The preprocessor directory ./preproc
+- added: Preprocessor; preproc.c, preproc.h
+######################################################################
+
+Specifics
+
+jcpasm.c:
+
+ver. 1.10
+- added: Label support.
+
+ver. 1.11
+- added: Integration with the preprocessor. The assembler calls it before compilation.
+- bugfix: Hash table alphabetical order bug.
+- bugfix: Hex numbers now recognized without 0x prefix.
+----------------------------------------------------------------------
+
+jcpu.c:
+
+ver. 1.01
+- bugfix:
+static void shr(void)
+regs[CF] = ( (tmp > 0) && ((tmp >> 1) == 0) );
+changed to
+regs[CF] = ((tmp & 0x01) > 0);
+----------------------------------------------------------------------
+
+jcpvm.c:
+
+ver. 1.01
+- bugfix: jcpu_load() added on cpu reset.
+----------------------------------------------------------------------
+
+preproc.c:
+
+ver. 1.00
+- added: %define directive
+- bugfix: Hash table alphabetical order bug.
+----------------------------------------------------------------------
+
+display.c:
+
+ver. 1.01
+- added: The '*' character now marks the address to which MAR points.
+----------------------------------------------------------------------
+
+jexjcpa.c:
+
+ver. 1.10
+- added: Label parsing; labels must begin with a '.'
+----------------------------------------------------------------------
