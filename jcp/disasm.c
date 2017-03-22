@@ -1,16 +1,17 @@
 /* disasm.c -- the disassembler engine */
-/* ver. 1.0 */
+/* ver. 1.01 */
 
 /* Reads binary, outputs jcpu assembly language */
 
 /* Author: Vladimir Dinev */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "disasm.h"
 #include "mach_code.h"
 
 #define ROWS 			(256 + 4)	// four more for the screen
-#define COLS 			32			// max instruction width
+#define COLS 			32			// max instruction string width
 #define INST_NBL		4			// >> 4 for the instruction nibble of a byte
 #define FLAGS_NBL		0x0F		// & 0x0F for the flags nibble of a conditional jump
 #define FLAG_C			0x08		// & 0x08 for the carry flag
@@ -19,17 +20,29 @@
 #define FLAG_Z			0x01		// & 0x01 for the zero flag
 #define REG_A			0x0C		// & 0x0C to get reg a
 #define REG_B			0x03		// & 0x03 to get reg b
-#define get_next_byte()	sprintf(str_instr, "%s %02X", str_instr, code[*offset+1])
+#define get_next_byte()	sprintf(str_instr, pref_nopref, str_instr, code[*offset+1])
+
+const char * pref_nopref;
 
 // disassemble the next instruction
 static char * diasm_get_instr(byte * code, int * offset);
 
-char ** disasm_dis(byte * code, int size)
+char ** disasm_dis(byte * code, int size, int prefhex)
 {
 	/* place the disassembled result in disasm_code
 	 * and return it's address */
 	static char dcode[ROWS][COLS];
 	static char * disasm_code[ROWS] = {NULL};
+	static char * hexpr[] = {"%s %02X", "%s %#02X"};
+	
+	if (prefhex < NO_PREF || prefhex > PREF_HEX)
+	{
+		fprintf(stderr, "Err: module disasm: Invalid value for argument ");
+		fprintf(stderr, "prefhex in function disasm_dis()\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	pref_nopref = hexpr[prefhex];
 	
 	// mark end of code for the display module
 	disasm_code[ROWS] = "--- --      -- --  --";

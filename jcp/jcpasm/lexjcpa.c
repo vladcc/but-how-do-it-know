@@ -1,5 +1,5 @@
 /* lexjcpa.c -- lexer implementation for the jcpasm */
-/* ver. 1.0 */
+/* ver. 1.10 */
 
 /* Reads the input source file and returns a token of what
  * was read, along with it's textual representation if any. */
@@ -15,6 +15,7 @@
 
 #define BUFF_SZ 	256	// the input buffer size
 #define COMMENT		'#'	// comments in the source start with #
+#define LBL_START	'.'	// labels begin with a '.'
 #define read_line()	(fgets(input_buff, BUFF_SZ, fp_in) != NULL)
 
 /* so we can describe token values in text 
@@ -22,9 +23,12 @@
 static const char * token_strs[] = {
 	"instruction",
 	"register",
+	"label",
 	"address/number",
 	"eof"
 };
+
+// TODO: DO THE LABELS
 	
 static FILE * fp_in;						// input file pointer
 static int line_no = 0;						// current line in the source
@@ -88,8 +92,8 @@ bool match(token tok)
 	/* match a token against the current token */
 	if (curr_tok != tok)
 	{
-		fprintf(stderr, "Err: line %d: %s expected but got %s\n",
-		line_no, token_strs[tok], token_strs[curr_tok]);
+		fprintf(stderr, "Err: line %d: %s expected but got < %s >\n",
+		line_no, token_strs[tok], sub_str);
 		return false;
 	}
 	
@@ -158,11 +162,26 @@ static int next_lexm(void)
 			continue;
 		
 		lexm_start = curr_ch+1;
-		// get substring
-		for (i = 0; i < SUB_STR_SZ && isalnum(*curr_ch); ++i, ++curr_ch)
-			sub_str[i] = *curr_ch;
 		
+		if (LBL_START == *curr_ch)
+		{
+			// get label
+			i = 0;
+			sub_str[i] = *curr_ch;
+			for (++i, ++curr_ch; i < SUB_STR_SZ && isalnum(*curr_ch); ++i, ++curr_ch)
+				sub_str[i] = *curr_ch;
+			
+			if (':' == *curr_ch)
+				sub_str[i++] = *curr_ch++;
+		}
+		else
+		{
+			// get substring
+			for (i = 0; i < SUB_STR_SZ && isalnum(*curr_ch); ++i, ++curr_ch)
+				sub_str[i] = *curr_ch;
+		}
 		sub_str[i] = NUL;
+		
 		
 		// eat comments
 		if (COMMENT == *curr_ch)
@@ -174,7 +193,7 @@ static int next_lexm(void)
 		// everything legal except spaces and the NUL should be eaten by now
 		if (!isspace(*curr_ch) && *curr_ch != NUL)
 		{
-			fprintf(stderr, "Err: line %d: misplaced character %c\n", 
+			fprintf(stderr, "Err: line %d: misplaced character '%c'\n", 
 					line_no, *curr_ch);
 			fprintf(stderr, "Parsing aborted\n");
 			exit(EXIT_FAILURE);
@@ -184,9 +203,10 @@ static int next_lexm(void)
 		if (NUL != *curr_ch)
 			++curr_ch;
 		
-		if ('R' == sub_str[0]) 			return TOK_REGISTER;
-		else if (isalpha(sub_str[0])) 	return TOK_INSTR;
-		else if (isdigit(sub_str[0]))	return TOK_LITERAL;
-		else if (sub_str[0] != NUL)		return ERR;
+		if ('R' == sub_str[0]) 				return TOK_REGISTER;
+		else if (LBL_START == sub_str[0])	return TOK_LABEL;
+		else if (isalpha(sub_str[0])) 		return TOK_INSTR;
+		else if (isdigit(sub_str[0]))		return TOK_LITERAL;
+		else if (sub_str[0] != NUL)			return ERR;
 	}
 }

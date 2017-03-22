@@ -1,5 +1,5 @@
 /* jcpu.c -- emulator for the John Clark Scott's computer from "But How Do It Know?" */
-/* ver.1.0 */
+/* ver.1.01 */
 
 /* This is an emulator of the computer from the book "But How Do It Know?"
  * by John Clark Scott. Internally airthmetic and logic is done with the C 
@@ -68,7 +68,7 @@ void jcpu_step(void)
 	/* CPU cycle */
 	/* 1. move IAR to MAR
 	 * 2. set IR to the value at the MAR address 
-	 * 3. add one to IAR *
+	 * 3. add one to IAR 
 	 * 4, 5, 6 execute instruction */		
 	regs[MAR] = regs[IAR];
 	regs[IR] = ram[regs[MAR]];
@@ -194,7 +194,7 @@ static void shr(void)
 	unsigned int tmp = regs[ra];
 	
 	regs[rb] = (tmp >> 1) | (regs[CF] << 7);
-	regs[CF] = ( (tmp > 0) && ((tmp >> 1) == 0) );
+	regs[CF] = ((tmp & 0x01) > 0);
 	set_zf();
 	return;
 }

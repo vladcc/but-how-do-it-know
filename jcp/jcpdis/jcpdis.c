@@ -1,5 +1,5 @@
 /* jcpdis.c -- disassembler for the jcpu */
-/* ver. 1.0 */
+/* ver. 1.01 */
 
 /* Reads a binary file and disassembles it
  * to jcpu assembly language. */
@@ -19,7 +19,7 @@
 #define help_opt()	printf("Help: %s %c%c\n", exenm, DASH, HELP)
 
 char exenm[] = "jcpdis";	// executable name
-char ver[] = "v1.0";		// executable version
+char ver[] = "v1.01";		// executable version
 
 FILE * efopen(const char * fname, const char * mode);
 int fsize(FILE *fp);
@@ -83,7 +83,7 @@ int main(int argc, char * argv[])
 	if (fread(code, file_size, 1, file_input) != 1)
 		goto readerr;
 	
-	char ** disstr = disasm_dis(code, file_size);
+	char ** disstr = disasm_dis(code, file_size, PREF_HEX);
 	FILE * file_output = efopen(fout, "w");
 	
 	int i;
@@ -95,6 +95,7 @@ int main(int argc, char * argv[])
 	
 	fclose(file_output);
 	fclose(file_input);
+	puts("Disassembling complete");
 	return 0;
 	
 readerr:
