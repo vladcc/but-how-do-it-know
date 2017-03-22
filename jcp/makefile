@@ -72,6 +72,9 @@ DISO=$(DIS).$(OBJ) $(DISASM).$(OBJ) $(MCODE).$(OBJ)
 dis: $(DISO)
 	$(CC) $(DISO) -o jcp$@$(EXEC)
 
+$(DIS).$(OBJ): $(DIS).c
+	$(CC) $< -c -o $@ $(CFLAGS)
+	
 # The assembler
 ASMDIR=$(CMDIR)/jcpasm
 ASM=$(ASMDIR)/jcpasm

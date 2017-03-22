@@ -58,7 +58,7 @@ void disp_init_frame(void)
 		sprintf(&frame[2+i][0], "%02X|%63s  ", i << 4, " ");
 	
 	// disassemble the whole ram
-	disasm_str = disasm_dis(ram, sizeof(ram));
+	disasm_str = disasm_dis(ram, sizeof(ram), NO_PREF);
 	
 	return;
 }

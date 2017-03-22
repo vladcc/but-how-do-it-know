@@ -18,7 +18,18 @@ ver. 1.11
 - bugfix: Hash table alphabetical order bug.
 - bugfix: Hex numbers now recognized without 0x prefix.
 ----------------------------------------------------------------------
+jcpdis.c:
 
+ver. 1.01
+- bugfix: Prefixes all literals with 0x
+- added: "Disassembling complete" message
+----------------------------------------------------------------------
+disasm.c:
+
+ver. 1.01
+- added: Third argument for disasm_dis(); specifies whether disassembled literals
+should be prefixed with 0x or not.
+----------------------------------------------------------------------
 jcpu.c:
 
 ver. 1.01
@@ -28,26 +39,22 @@ regs[CF] = ( (tmp > 0) && ((tmp >> 1) == 0) );
 changed to
 regs[CF] = ((tmp & 0x01) > 0);
 ----------------------------------------------------------------------
-
 jcpvm.c:
 
 ver. 1.01
 - bugfix: jcpu_load() added on cpu reset.
 ----------------------------------------------------------------------
-
 preproc.c:
 
 ver. 1.00
 - added: %define directive
 - bugfix: Hash table alphabetical order bug.
 ----------------------------------------------------------------------
-
 display.c:
 
 ver. 1.01
 - added: The '*' character now marks the address to which MAR points.
 ----------------------------------------------------------------------
-
 jexjcpa.c:
 
 ver. 1.10
