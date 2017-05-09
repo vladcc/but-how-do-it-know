@@ -1,5 +1,5 @@
 /* display.c -- provides display functionality for the jcpvm */
-/* ver. 1.0 */
+/* ver. 1.02 */
 
 /* Creates a frame buffer and fills it with what
  * represents the current machine state of the jcpu. 
@@ -7,6 +7,7 @@
 
 /* Author: Vladimir Dinev */
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "os_def.h"
 #include "display.h"
@@ -20,6 +21,8 @@
 #define CODE_LINE	20		// disassembled code begins at line index 20
 #define INSTR_NUM	4		// the number of disassembled instructions minus the last executed
 #define INSTR_MAX	256		// maximum number of instructions to disassemble
+#define MARK_IAR	'@'		// '@' marks the address pointed to by IAR
+#define MARK_MAR	'*'		// '*' marks the address pointed to by MAR
 
 char frame[FRAME_ROWS][FRAME_COLS];	// the frame buffer
 char ** disasm_str;					// a pointer to an array of strings; holds the disasm text
@@ -55,7 +58,7 @@ void disp_init_frame(void)
 		sprintf(&frame[2+i][0], "%02X|%63s  ", i << 4, " ");
 	
 	// disassemble the whole ram
-	disasm_str = disasm_dis(ram, sizeof(ram));
+	disasm_str = disasm_dis(ram, sizeof(ram), NO_PREF);
 	
 	return;
 }
@@ -97,11 +100,18 @@ static void make_frame(int hex_dec, int last_instr)
 	do_code(last_instr);
 	do_regs(hex_dec);
 	
-	int row = regs[IAR] >> 4;
-	int col = regs[IAR] & 0x0F;
+	int row = regs[MAR] >> 4;
+	int col = regs[MAR] & 0x0F;
+	
+	// mark current ram address
+	frame[2 + row][2 + (4 * col) + 1] = MARK_MAR;
+	
+	row = regs[IAR] >> 4;
+	col = regs[IAR] & 0x0F;
 	
 	// mark current instruction address
-	frame[2 + row][2 + (4 * col) + 1] = '@';
+	frame[2 + row][2 + (4 * col) + 1] = MARK_IAR;
+	
 	return;
 }
 
@@ -165,8 +175,8 @@ static void do_regs(int hex_dec)
 	};
 		
 	static char * reg_base[] =  {
-		"%s  %-3s %02X ", 
-		"%s  %-3s %-3d"
+		"%s %c%-3s %02X ", 
+		"%s %c%-3s %-3d"
 	};
 	
 	int i, j;
@@ -175,15 +185,23 @@ static void do_regs(int hex_dec)
 	// NUM_REGS + 2 empty lines
 	for (i = j = 0; i < NUM_REGS + 2; ++i)
 	{
+		cp = &frame[REG_LINE+i][0];
 		switch (i)
 		{
+			// mark MAR 
+			case 0:
+				sprintf(cp, reg_base[hex_dec], cp, MARK_MAR, regs_str[i], regs[j++]);
+				break;
+			// mark IAR
+			case 1:
+				sprintf(cp, reg_base[hex_dec], cp, MARK_IAR, regs_str[i], regs[j++]);
+				break;
 			// skip the empty lines
 			case 3:
 			case 8:
 				break;
 			default:
-				cp = &frame[REG_LINE+i][0];
-				sprintf(cp, reg_base[hex_dec], cp, regs_str[i], regs[j++]);
+				sprintf(cp, reg_base[hex_dec], cp, ' ', regs_str[i], regs[j++]);
 				break;
 		}
 	}

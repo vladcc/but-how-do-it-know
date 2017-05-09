@@ -1,5 +1,5 @@
 /* jcpvm.c -- a virtual machine for the jcpu */
-/* ver. 1.0 */
+/* ver. 1.02 */
 
 /* Implements the user interface. */
 
@@ -30,7 +30,7 @@
 #define print_ver()		printf("%s %s\n", exenm, ver)
 
 char exenm[] = "jcpvm";	// executable name
-char ver[] = "v1.0";	// executable version
+char ver[] = "v1.02";	// executable version
 int last_inst = 0;		// the previous executed instruction address
 
 FILE * efopen(const char * fname);
@@ -96,11 +96,11 @@ int main(int argc, char * argv[])
 	{
 		new_screen();
 		fgets(cmdbuff, IN_BUFF_SZ, stdin);
-
+		ch = cmdbuff;
+		
 		while (isspace(*ch))
 			++ch;
-			
-		ch = cmdbuff;
+		
 		switch (*ch)
 		{
 			case DECIMAL:
@@ -117,6 +117,7 @@ int main(int argc, char * argv[])
 				break;
 			case RESET:
 				reset_cpu();
+				jcpu_load(incode, f_sz);
 				continue;
 				break;
 			case HELP:
