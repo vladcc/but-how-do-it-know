@@ -1,0 +1,37 @@
+# naive multiplication test
+# multiplies reg a times reg b, result is left in reg a
+%define a		r0	# rag a; holds result at the end
+%define b		r1	# reg b
+%define one		r2	# holds one
+%define save	r3	# save a
+%define mplcand	2
+%define mplier	5
+
+	data one, 1
+	data a, mplcand
+	data b, mplier
+	cmp one, b	# if a * 0
+	ja .mulz
+	cmp b, one	# if a * 1
+	je .done
+	clf
+	# mov a, save
+	xor save, save 
+	or a, save
+.mult:
+	add save, a
+	clf
+	# two's compliment
+	add one, b
+	not one, one
+	add one, b
+	not one, one
+	clf
+	cmp one, b
+	je .done
+	jmp .mult
+	
+.mulz:
+	xor a, a
+.done:
+	jmp .done
