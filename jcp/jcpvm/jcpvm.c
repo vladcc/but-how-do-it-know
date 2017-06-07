@@ -1,9 +1,10 @@
 /* jcpvm.c -- a virtual machine for the jcpu */
-/* ver. 1.02 */
+/* ver. 1.021 */
 
 /* Implements the user interface. */
 
 /* Author: Vladimir Dinev */
+#include "../os_def.h"
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -25,12 +26,18 @@
 #define press_enter()	printf("Press enter to continue"), getchar()
 #define prompt()		printf("%*s\rcmd: ", FRAME_ROWS, " ")
 #define reset_cur_pos()	disp_move_cursor_xy(0, 0)
-#define mv_cur_bottom()	disp_move_cursor_xy(24, 0)
-#define reset_cpu()		memset(regs, 0, NUM_REGS)
+
+#ifdef WINDOWS
+#define mv_cur_bottom()	disp_move_cursor_xy(FRAME_ROWS, 0)
+#else
+#define mv_cur_bottom()	disp_move_cursor_xy(FRAME_ROWS+1, 0)
+#endif
+
+#define reset_cpu()		memset(regs, 0, NUM_REGS), last_inst = -1
 #define print_ver()		printf("%s %s\n", exenm, ver)
 
 char exenm[] = "jcpvm";	// executable name
-char ver[] = "v1.02";	// executable version
+char ver[] = "v1.021";	// executable version
 int last_inst = 0;		// the previous executed instruction address
 
 FILE * efopen(const char * fname);

@@ -1,0 +1,25 @@
+# Addition of numbers with result greater than what one byte can hold
+%define term1		100
+%define term2		255
+%define a			r0
+%define b			r1
+%define upper_part	r2	# holds the upper byte of the result
+%define lower_part	r3	# holds the lower byte of the result
+
+	data a, term1
+	data b, term2
+	
+	# zero out
+	xor lower_part, lower_part
+	xor upper_part, upper_part
+	
+	# get the value of b to the lower byte
+	or b, lower_part
+	
+	clf
+	add a, lower_part			# add a to the lower part
+	add upper_part, upper_part	# add carry over to the upper part
+	
+	# mark the end of the program by jumping to the same place
+.end:
+	jmp .end

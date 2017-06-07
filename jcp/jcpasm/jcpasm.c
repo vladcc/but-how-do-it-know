@@ -1,5 +1,5 @@
 /* jcpasm.c -- assembler for the jcpu */
-/* ver. 1.12 */
+/* ver. 1.121 */
 
 /* Reads an assembly text file and outputs
  * the respective binary instructions for the jcpu. */
@@ -44,7 +44,7 @@ static int all_size = 0;	// code buffer pointer
 CHTbl * instr_htbl;			// instruction hash table pointer
 CHTbl * lbls_htbl;			// label hash table pointer
 char exenm[] = "jcpasm";	// executable name
-char ver[] = "v1.12";		// executable version
+char ver[] = "v1.121";		// executable version
 int curr_lineno = 0;		// current line number
 char * fin, * fout;			// input/output file strings
 
@@ -111,7 +111,7 @@ int main(int argc, char * argv[])
 	if (DASH != argv[2][0] || OUTF != argv[2][1])
 	{
 		fprintf(stderr, "Err: unrecognized option %s\n", argv[2]);
-		return -1;
+		quit();
 	} 
 	
 	static char curr_text[SUB_STR_SZ];
@@ -124,7 +124,7 @@ int main(int argc, char * argv[])
 		 (chtbl_init(lbls_htbl, BUCKETS, hash_lbl, compar_lbl, free_labels) < 0) )
 	{
 		fprintf(stderr, "Err: hash table initializatoin failed\n");
-		return -1;
+		quit();
 	}
 	
 	fin = argv[1];
@@ -143,7 +143,10 @@ int main(int argc, char * argv[])
 			fin = run_ppstr;
 		}
 		else
+		{
 			free(run_ppstr);
+			run_ppstr = NULL;
+		}
 	}
 	else
 	{
@@ -198,10 +201,13 @@ int main(int argc, char * argv[])
 	eval_labels();
 	
 	if (fwrite(binary , all_size, 1, output_file) != 1)
-		fprintf(stderr, "Err: output was not written properly\n");
-	
+	{
+		fprintf(stderr, "Err: output file was not written properly\n");
+		quit();
+	}
+
 	puts("Compilation successful");
-	
+
 	free(run_ppstr);
 	fclose(output_file);
 	fclose(input_file);
@@ -560,7 +566,7 @@ void resolve_lbl_addr(ListElmt * l_element, void * args)
 	
 	label dummy_, * dum, * searchlbl;
 	dum = &dummy_;
-	dum->lbl_str = emalloc(strlen(lbl->lbl_str));
+	dum->lbl_str = emalloc(strlen(lbl->lbl_str)+1);
 	
 	strcpy(dum->lbl_str, lbl->lbl_str);
 	

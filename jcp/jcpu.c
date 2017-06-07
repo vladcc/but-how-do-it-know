@@ -1,5 +1,5 @@
 /* jcpu.c -- emulator for the John Clark Scott's computer from "But How Do It Know?" */
-/* ver.1.01 */
+/* ver.1.02 */
 
 /* This is an emulator of the computer from the book "But How Do It Know?"
  * by John Clark Scott. Internally airthmetic and logic is done with the C 
@@ -55,8 +55,14 @@ void jcpu_load(const byte * code, int csize)
 	};
 		  
 	func_arr = fa;
-
+	
 	int i;
+	
+	// zero out the RAM
+	for (i = 0; i < RAM_S; ++i)
+		ram[i] = 0;
+	
+	// load the code
 	for (i = 0; i <= BYTE_MAX && i < csize; ++i)
 		ram[i] = code[i];
 	

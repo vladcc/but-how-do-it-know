@@ -1,5 +1,5 @@
 /* jcpu.h -- public interface for jcpu.c */
-/* ver. 1.01 */
+/* ver. 1.02 */
 #ifndef JCPU_H
 #define JCPU_H
 

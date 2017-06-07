@@ -37,7 +37,7 @@ void chtbl_destroy(CHTbl * htbl)
 	int i;
 	for (i = 0; i < htbl->buckets; ++i)
 		list_destroy(&htbl->table[i]);
-		
+	
 	free(htbl->table);
 	
 	// zero out memory

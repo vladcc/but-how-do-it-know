@@ -1,5 +1,5 @@
 /* display.h -- the display module public interface */
-/* ver. 1.02 */
+/* ver. 1.03 */
 #ifndef DISPLAY_H
 #define DISPLAY_H
 

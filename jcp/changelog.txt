@@ -6,7 +6,16 @@ General
 - added: Preprocessor; preproc.c, preproc.h
 
 05.05.17
-- Review on the Raspberry Pi, branch ver.1.4
+- Review on the Raspberry Pi, branch ver. 1.4
+
+05.06.17
+- Changes in lexjcpa, jcpasm, the preproc, display module, jcpvm, and jcpu, branch ver. 1.5
+lexjpca is now 	ver. 1.11
+jcpasm is now	ver. 1.121
+preproc is now 	ver. 1.02
+display is now 	ver. 1.03
+jcpvm is now 	ver. 1.021
+jcpu is now		ver. 1.02
 ######################################################################
 
 Specifics
@@ -24,6 +33,11 @@ ver. 1.11
 ver. 1.12
 - bugfix: Illegal characters are now detected in literals.
 - added: Better number parsing.
+
+ver. 1.121
+- bugfix: run_ppstr NULLed on preproc failure; no segfault if there are no labels.
+- bugfix: + 1 added in resolve_lbl_addr(); now emalloc(strlen()+1).
+- added: quit() on output file write fail.
 ----------------------------------------------------------------------
 jcpdis.c:
 
@@ -48,6 +62,9 @@ static void shr(void)
 regs[CF] = ( (tmp > 0) && ((tmp >> 1) == 0) );
 changed to
 regs[CF] = ((tmp & 0x01) > 0);
+
+ver. 1.02
+- bugfix: Persistent memory changes; RAM now zeroes out on every load.
 ----------------------------------------------------------------------
 jcpvm.c:
 
@@ -57,6 +74,9 @@ ver. 1.02
 - bugfix: Get the address of the input buffer at the proper time.
 Seg. fault while reading input fixed.
 - change: Internal jcpvm version updated.
+ver. 1.021
+- added: last_inst = -1 on jcpu reset; blanks out the last instruction line.
+- added: os_def.h, mv_cur_bottom() moves FRAME_ROWS+1 on Linux.
 ----------------------------------------------------------------------
 preproc.c:
 
@@ -64,7 +84,11 @@ ver. 1.00
 - added: %define directive
 - bugfix: Hash table alphabetical order bug.
 ver. 1.01
-- changed: external executable Linux name to preproc.bin
+- changed: External executable Linux name to preproc.bin
+ver. 1.02
+- bugfix: read_word() now checks for '\0' as an end-marker.
+- bugfix: chtbl_destroy() now called on early return from main().
+- bugfix: outfname freed.
 ----------------------------------------------------------------------
 display.c:
 
@@ -73,9 +97,13 @@ ver. 1.01
 '@' marks the address to which IAR points.
 ver. 1.02
 - added: '*' is now printed in front of MAR. '@' is printed in front of IAR.
+ver. 1.03
+- added: The "last executed instruction" line goes blank on jcpu reset.
 ----------------------------------------------------------------------
 jexjcpa.c:
 
 ver. 1.10
-- added: Label parsing; labels must begin with a '.'
+- added: Label parsing; labels must begin with a '.' and contain alpha numeric characters.
+ver. 1.11
+- added: Labels can now contain underscores.
 ----------------------------------------------------------------------

@@ -1,5 +1,5 @@
 /* lexjcpa.c -- lexer implementation for the jcpasm */
-/* ver. 1.10 */
+/* ver. 1.11 */
 
 /* Reads the input source file and returns a token of what
  * was read, along with it's textual representation if any. */
@@ -168,7 +168,9 @@ static int next_lexm(void)
 			// get label
 			i = 0;
 			sub_str[i] = *curr_ch;
-			for (++i, ++curr_ch; i < SUB_STR_SZ && isalnum(*curr_ch); ++i, ++curr_ch)
+			for (++i, ++curr_ch; 
+				 i < SUB_STR_SZ && (isalnum(*curr_ch) || '_' == *curr_ch);
+				 ++i, ++curr_ch)
 				sub_str[i] = *curr_ch;
 			
 			if (':' == *curr_ch)

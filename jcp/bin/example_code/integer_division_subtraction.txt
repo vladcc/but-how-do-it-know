@@ -1,0 +1,58 @@
+# Integer division by subtraction
+# Performs a / b, result is left in the quotent register,
+# remainder in the remainder register.
+%define a			r0
+%define b			r1
+%define quotent		r2
+%define one			r3
+%define remainder	r3
+%define divident	15
+%define divisor		6
+
+	data a, divident
+	
+	data b, divisor
+	or b, b
+	jz .end		# division by zero
+	
+	data one, 1
+	xor quotent, quotent
+	
+	cmp a, b
+	jae .subtract
+	jmp .done
+	
+	
+.subtract:
+	# subtract divisor from divident
+	# two's compliment
+	clf
+	not b, b
+	add one, b
+	clf
+	add b, a			# subtraction happens here
+	clf
+	add one, quotent	# count how many time we subtract
+	clf
+	
+	# undo two's compliment
+	not b, b		
+	add one, b
+	
+	# while the divident is greater or equal to the divisor subtract again
+	cmp a, b
+	jae .subtract
+	# Note: at this point the a holds the remainder.
+
+.done:	
+	# order registers as divident, divisor, quotent, remainder for easy review
+	xor remainder, remainder
+	or a, remainder
+	data a, divident
+	data b, divisor 
+	clf
+	
+	# mark the end of the program by jumping to the same place
+.end:
+	jmp .end
+	

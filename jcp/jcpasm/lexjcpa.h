@@ -1,5 +1,5 @@
 /* lexjcpa.h -- header file for the jcp assembler lexer */
-/* ver. 1.10 */
+/* ver. 1.11 */
 
 /* Defines used constants and declares public
  * functions. Provides a class-like interface. */

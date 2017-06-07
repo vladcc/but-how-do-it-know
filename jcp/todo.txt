@@ -1,2 +1,2 @@
+write examples asm - done
 implement the compiler
-write examples

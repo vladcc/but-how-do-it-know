@@ -3,7 +3,6 @@
 /* v1.0 */
 #include <stdlib.h> // for NULL
 #include <string.h> // for memset()
-#include <stdio.h> 	// debug
 #include <stdbool.h>
 #include "list.h"
 
