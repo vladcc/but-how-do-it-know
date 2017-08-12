@@ -18,7 +18,7 @@ jcpvm is now 	ver. 1.021
 jcpu is now		ver. 1.02
 
 11.08.2017
-- Added lang.c (compiler), lexlang.c, lexlang.h, jcpasm.h header file
+- Added lang.c (compiler), lexlang.c, lexlang.h, jcpasm.h header file, branch ver. 1.6
 lang is now		ver. 1.0
 lexlang is now 	ver. 1.0
 jcpasm is now	ver. 1.122
