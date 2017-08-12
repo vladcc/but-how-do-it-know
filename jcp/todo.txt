@@ -1,2 +1,4 @@
-implement the compiler
-write examples
+write examples asm - done
+implement the compiler - done
+compiler for lin x86 and rpi - done
+test on lin x86 and rpi - done

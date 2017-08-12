@@ -23,7 +23,7 @@ CMDIR=.
 RM=rm
 
 # All
-all: vm preproc asm dis 
+all: vm preproc asm dis lang
 
 # The virtual machine
 VMDIR=$(CMDIR)/jcpvm
@@ -80,7 +80,7 @@ DIS=$(DISDIR)/jcpdis
 DISO=$(DIS).$(OBJ) $(DISASM).$(OBJ) $(MCODE).$(OBJ)
 
 dis: $(DISO)
-	$(CC) $(DISO) -o jcp$@$(EXEC)
+	$(CC) $(DISO) -o jcp$@$(EXEC) $(CFLAGS)
 
 $(DIS).$(OBJ): $(DIS).c
 	$(CC) $< -c -o $@ $(CFLAGS)
@@ -92,12 +92,27 @@ LEXR=$(ASMDIR)/lexjcpa
 ASMO=$(ASM).$(OBJ) $(LEXR).$(OBJ) $(HTBL).$(OBJ) $(LIST).$(OBJ) $(MCODE).$(OBJ)
 
 asm: $(ASMO)
-	$(CC) $(ASMO) -o jcp$@$(EXEC)
+	$(CC) $(ASMO) -o jcp$@$(EXEC) $(CFLAGS)
 
-$(ASM).$(OBJ): $(ASM).c $(MCODE).h $(LEXR).h
+$(ASM).$(OBJ): $(ASM).c $(ASM).h $(MCODE).h $(LEXR).h
 	$(CC) $< -c -o $@ $(CFLAGS)
 
 $(LEXR).$(OBJ): $(LEXR).c $(LEXR).h $(MCODE).h
+	$(CC) $< -c -o $@ $(CFLAGS)
+	
+# The compiler
+LANGDIR=$(CMDIR)/lang
+LANG=$(LANGDIR)/lang
+LANGLEX=$(LANGDIR)/lexlang
+LANGO=$(LANG).$(OBJ) $(LANGLEX).$(OBJ) $(MCODE).$(OBJ)
+
+lang: $(LANGO)
+	$(CC) $(LANGO) -o $@$(EXEC) $(CFLAGS)
+	
+$(LANG).$(OBJ): $(LANG).c $(MCODE).h $(LANGLEX).h
+	$(CC) $< -c -o $@ $(CFLAGS)
+
+$(LANGLEX).$(OBJ): $(LANGLEX).c $(LANGLEX).h $(MCODE).h
 	$(CC) $< -c -o $@ $(CFLAGS)
 	
 clean:	
@@ -105,6 +120,7 @@ clean:
 	$(RM) $(VMDIR)/*.$(OBJ)
 	$(RM) $(PPDIR)/*.$(OBJ)
 	$(RM) $(ASMDIR)/*.$(OBJ)
+	$(RM) $(LANGDIR)/*.$(OBJ)
 	$(RM) $(DISDIR)/*.$(OBJ)
 	$(RM) $(AADTDIR)/*.$(OBJ)
 	$(RM) $(CMDIR)/*$(EXEC)

@@ -1,0 +1,31 @@
+# Subtraction by addition or:
+# a - b = a + (-b) 
+# Using two's complement to represent a negative number:
+# 1. make all zeros ones, all ones zeros
+# 2. add one
+%define term1		9
+%define term2		3
+%define a			r0
+%define b			r1
+%define result		r2
+%define one			r3
+
+	a = term1
+	b = term2
+	one = 1
+	result = 0
+	
+	clf
+	or b, result		# get the value of b to result
+	not result, result	# step 1 from above
+	add one, result		# step 2 from above
+	clf
+	add a, result		# now add a to (-b)
+	
+	# leave only a, b, and the result in the registers for easy review
+	xor one, one
+	clf
+	
+	loop
+		# mark the end of the program by jumping in place
+	endloop

@@ -1,0 +1,58 @@
+# Integer division by subtraction
+# Performs a / b, result is left in the quotent register,
+# remainder in the remainder register.
+%define goto		jmp
+%define a			r0
+%define b			r1
+%define quotent		r2
+%define one			r3	# r3 is used for holding one first
+%define remainder	r3	# and the remainder later
+%define dividend	15
+%define divisor		6
+	
+	a = dividend
+	b = divisor
+	quotent = 0
+	
+	if b == quotent
+		loop
+			# division by zero; don't go further
+		endloop
+	endif
+	
+	if a >= b
+		one = 1
+		loop
+			# subtract divisor from dividend
+			# two's compliment
+			clf
+			not b, b
+			add one, b
+			clf
+			add b, a			# subtraction happens here
+			clf
+			add one, quotent	# count how many time we subtract
+			clf
+			
+			# undo two's compliment
+			not b, b		
+			add one, b
+			
+			# while the dividend is greater or equal to the divisor subtract again
+			if a < b
+				break
+			endif
+		endloop
+		# Note: at this point a holds the remainder.
+	endif
+	
+	# done, order registers as dividend, divisor, quotent, remainder for easy review
+	remainder = 0
+	or a, remainder
+	a = dividend
+	b = divisor
+	clf
+
+	loop
+		# mark the end of the program by jumping in place
+	endloop

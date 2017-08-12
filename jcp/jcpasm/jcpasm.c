@@ -1,5 +1,5 @@
 /* jcpasm.c -- assembler for the jcpu */
-/* ver. 1.12 */
+/* ver. 1.123 */
 
 /* Reads an assembly text file and outputs
  * the respective binary instructions for the jcpu. */
@@ -44,7 +44,7 @@ static int all_size = 0;	// code buffer pointer
 CHTbl * instr_htbl;			// instruction hash table pointer
 CHTbl * lbls_htbl;			// label hash table pointer
 char exenm[] = "jcpasm";	// executable name
-char ver[] = "v1.12";		// executable version
+char ver[] = "v1.123";		// executable version
 int curr_lineno = 0;		// current line number
 char * fin, * fout;			// input/output file strings
 
@@ -93,7 +93,7 @@ int main(int argc, char * argv[])
 			printf("%s %s\n", exenm, ver);
 		else
 		{
-			fprintf(stderr, "Err: unrecognized argument \"%s\"\n", argv[1]);
+			fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: unrecognized argument \"%s\"\n", argv[1]);
 			print_use();
 			help_opt();
 		}
@@ -110,8 +110,8 @@ int main(int argc, char * argv[])
 	
 	if (DASH != argv[2][0] || OUTF != argv[2][1])
 	{
-		fprintf(stderr, "Err: unrecognized option %s\n", argv[2]);
-		return -1;
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: unrecognized option %s\n", argv[2]);
+		quit();
 	} 
 	
 	static char curr_text[SUB_STR_SZ];
@@ -123,16 +123,20 @@ int main(int argc, char * argv[])
 	if ( (chtbl_init(instr_htbl, BUCKETS, hash_inst, compar_inst, NULL) < 0) ||
 		 (chtbl_init(lbls_htbl, BUCKETS, hash_lbl, compar_lbl, free_labels) < 0) )
 	{
-		fprintf(stderr, "Err: hash table initializatoin failed\n");
-		return -1;
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: hash table initializatoin failed\n");
+		quit();
 	}
 	
 	fin = argv[1];
 	fout = argv[3];
 	
 	// run the preprocessor
-	char * run_ppstr = emalloc(strlen(ppexenm) + strlen(fin) + 2);
+	char * run_ppstr = emalloc(strlen(ppexenm) + strlen(fin) + 8);
 	sprintf(run_ppstr, "%s %s", ppexenm, fin);
+	
+	// check file
+	FILE * input_file = efopen(fin, "r");
+	fclose(input_file);
 	
 	if (is_preproc_here())
 	{
@@ -143,11 +147,14 @@ int main(int argc, char * argv[])
 			fin = run_ppstr;
 		}
 		else
+		{
 			free(run_ppstr);
+			run_ppstr = NULL;
+		}
 	}
 	else
 	{
-		printf("Warning: %s: The preprocessor should be in the same directory\n", exenm);
+		printf("%s: ", exenm), printf("Warning: %s: The preprocessor should be in the same directory\n", exenm);
 		printf("but it's not here. Continuing anyway.\n");
 	}
 	
@@ -155,7 +162,7 @@ int main(int argc, char * argv[])
 	for (i = 0; i < INSTR_COUNT; ++i)
 		chtbl_insert(instr_htbl, &mcode[i]);
 	
-	FILE * input_file = efopen(fin, "r");
+	input_file = efopen(fin, "r");
 	Lexer.SetInput(input_file);
 	Lexer.Init();
 	in_buff = curr_text;
@@ -177,7 +184,7 @@ int main(int argc, char * argv[])
 				parse_label(LBL_ADDR);
 				break;
 			default:
-				fprintf(stderr, "Err: line %d: ", curr_lineno);
+				fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: ", curr_lineno);
 				fprintf(stderr, "something not an instruction, address, or register < %s >\n",
 						in_buff);
 				quit();
@@ -188,7 +195,7 @@ int main(int argc, char * argv[])
 	FILE * output_file = efopen(fout, "wb");
 	if (all_size > MAX_CODE)
 	{
-		printf("Warning: resulting code is bigger than the maximum of %d bytes\n",
+		printf("%s: ", exenm), printf("Warning: resulting code is bigger than the maximum of %d bytes\n",
 				MAX_CODE);
 		printf("Only the first %d bytes will be saved in the binary\n", MAX_CODE);
 				
@@ -198,10 +205,13 @@ int main(int argc, char * argv[])
 	eval_labels();
 	
 	if (fwrite(binary , all_size, 1, output_file) != 1)
-		fprintf(stderr, "Err: output was not written properly\n");
-	
+	{
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: %s: output file was not written properly\n", exenm);
+		quit();
+	}
+
 	puts("Compilation successful");
-	
+
 	free(run_ppstr);
 	fclose(output_file);
 	fclose(input_file);
@@ -231,7 +241,7 @@ void parse_instr(void)
 				case 'E': binary[all_size] |= 1 << 1; break;
 				case 'Z': binary[all_size] |= 1; break;
 				default:
-					fprintf(stderr, "Err: line %d: invalid instruction < %s >\n", 
+					fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: invalid instruction < %s >\n", 
 							curr_lineno, in_buff);
 					quit();
 					break;
@@ -290,7 +300,7 @@ void parse_instr(void)
 	}
 	else
 	{
-		fprintf(stderr, "Err: line %d: invalid instruction < %s >\n", 
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: invalid instruction < %s >\n", 
 				curr_lineno, in_buff);
 		quit();
 	}
@@ -316,7 +326,7 @@ int parse_register(void)
 	return reg;
 
 regerr:
-	fprintf(stderr, "Err: line %d: bad register < %s >\n", 
+	fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: bad register < %s >\n", 
 			curr_lineno, in_buff);
 	quit();
 	return -1; // we never come here
@@ -329,7 +339,7 @@ void parse_label(char context)
 	
 	if (strlen(in_buff) < 3)
 	{
-		fprintf(stderr, "Err: line %d: bad label < %s >\n",
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: bad label < %s >\n",
 				curr_lineno, in_buff);
 		quit();
 	}
@@ -338,10 +348,10 @@ void parse_label(char context)
 	if (curr_lbl->context != context)
 	{
 		if (LBL_ADDR == curr_lbl->context)
-			fprintf(stderr, "Err: line %d: label < %s > should not end with '%c'\n", 
+			fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: label < %s > should not end with '%c'\n", 
 					curr_lineno, in_buff ,LBL_ADDR);
 		else
-			fprintf(stderr, "Err: line %d: label < %s > should end with '%c'\n", 
+			fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: label < %s > should end with '%c'\n", 
 					curr_lineno, in_buff, LBL_ADDR);
 		quit();
 	}
@@ -352,7 +362,7 @@ void parse_label(char context)
 	{
 		lblfound = *(label **)lblfound;
 		
-		fprintf(stderr, "Err: line %d: duplicate labels < %s > on lines %d and %d\n",
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: duplicate labels < %s > on lines %d and %d\n",
 			curr_lineno, in_buff, lblfound->lineno, curr_lbl->lineno);
 		quit();
 	}
@@ -377,7 +387,7 @@ void parse_address(void)
 	{
 		if (strpbrk(in_buff, "ABCDEF") != NULL)
 		{
-			fprintf(stderr, "Err: line %d: < %s > ",
+			fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: < %s > ",
 					curr_lineno, in_buff);
 			fprintf(stderr, "Hex numbers should be prefixed with \"0x\"\n");
 			quit();
@@ -388,7 +398,7 @@ void parse_address(void)
 		
 	if (addr_state != 1 || num > 0xFF)
 	{
-		fprintf(stderr, "Err: line %d: invalid address < %s >\n", 
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: invalid address < %s >\n", 
 				curr_lineno, in_buff);
 		quit();
 	}
@@ -413,7 +423,7 @@ void check_literal(void)
 	{
 		if (!isxdigit(*curr_ch))
 		{
-			fprintf(stderr, "Err: line %d: invalid literal < %s >\n",
+			fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: invalid literal < %s >\n",
 					curr_lineno, in_buff);
 			quit();
 		}
@@ -452,8 +462,8 @@ void print_ln_err(void)
 	if ('\n' == src_ln[end])
 		src_ln[end] = NUL;
 		
-	fprintf(stderr, "%s\n", src_ln);
-	fprintf(stderr, "%*c\n", Lexer.GetErrPos(), '^');
+	fprintf(stderr, "%s: ", exenm), fprintf(stderr, "%s\n", src_ln);
+	fprintf(stderr, "%s: ", exenm), fprintf(stderr, "%*c\n", Lexer.GetErrPos(), '^');
 	
 	return;
 }
@@ -560,7 +570,7 @@ void resolve_lbl_addr(ListElmt * l_element, void * args)
 	
 	label dummy_, * dum, * searchlbl;
 	dum = &dummy_;
-	dum->lbl_str = emalloc(strlen(lbl->lbl_str));
+	dum->lbl_str = emalloc(strlen(lbl->lbl_str)+1);
 	
 	strcpy(dum->lbl_str, lbl->lbl_str);
 	
@@ -584,7 +594,7 @@ void resolve_lbl_addr(ListElmt * l_element, void * args)
 	}
 	else
 	{
-		fprintf(stderr, "Err: line %d: target label < %s > doesn't exist\n",
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: target label < %s > doesn't exist\n",
 				lbl->lineno, dum->lbl_str);
 		quit();
 	}
@@ -601,7 +611,7 @@ void look_lone_lbls(ListElmt * l_element, void * args)
 	label * lbl = (label *)l_element->data;
 	
 	if (false == lbl->visited)
-		fprintf(stderr, "Warning: line %d: unused label < %s >\n",
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Warning: line %d: unused label < %s >\n",
 				lbl->lineno, lbl->lbl_str);
 	
 	return;
@@ -629,7 +639,7 @@ FILE * efopen(const char * fname, const char * mode)
 	
 	if ( (fp = fopen(fname, mode)) == NULL)
 	{
-		fprintf(stderr, "Err: could not open file \"%s\"\n", fname);
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: could not open file \"%s\"\n", fname);
 		exit(EXIT_FAILURE);
 	}
 	
@@ -643,7 +653,7 @@ void * emalloc(size_t nbytes)
 	
 	if ((newmem = malloc(nbytes)) == NULL)
 	{
-		fprintf(stderr, "Err: memory allocation failed\n");
+		fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: memory allocation failed\n");
 		exit(EXIT_FAILURE);
 	}
 	

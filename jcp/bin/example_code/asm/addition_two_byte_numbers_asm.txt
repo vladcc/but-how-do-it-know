@@ -1,0 +1,27 @@
+# Addition of two two-byte numbers:
+# The maximum value a two-byte number can hold is 0xFFFF, or 65535 decimal.
+# If we get a result greater than 0xFFFF, then we count the Carry bit as a byte with the value of 0x01.
+# e.g. 0xFFFF + 0xFFFF results in 0xFFFE and sets the Carry. We put that infront and get 0x01FFFE.
+# And indeed 0xFFFF + 0xFFFF = 0x01FFFE.
+# Let's do 0xABCD + 0x1234 in the code; that should give us 0xBE01 as a result, or 0xBE in b_up
+# and 0x01 in b_low.
+%define a_up		r0
+%define a_low		r1
+%define b_up		r2
+%define b_low		r3
+%define term1_up	0xAB
+%define term1_low	0xCD
+%define term2_up	0x12
+%define term2_low	0x34
+
+	data a_up, term1_up
+	data a_low, term1_low
+	data b_up, term2_up
+	data b_low, term2_low
+	
+	add a_low, b_low
+	add a_up, b_up		# adds carry over, if any
+	
+	# mark the end of the program by jumping to the same place
+.end:
+	jmp .end

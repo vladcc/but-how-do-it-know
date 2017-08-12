@@ -1,0 +1,56 @@
+# Multiplication by repetative addition
+%define a		r0	# rag a; holds result at the end
+%define b		r1	# reg b
+%define one		r2	# holds one
+%define save	r3	# save a
+%define mplcand	3
+%define mplier	4
+
+	data one, 1
+	data a, mplcand
+	data b, mplier
+	
+	cmp one, b	# if a * 0
+	ja .mult_by_zero
+	# can also be done with:
+	# or b, b
+	# jz .mult_by_zero
+	
+	cmp one, a	# if 0 * b
+	ja .mult_by_zero
+	cmp b, one	# if a * 1
+	je .done
+	clf
+	
+	# place the value of a in save
+	xor save, save 
+	or a, save
+	
+.mult:
+	clf
+	add save, a
+	# two's complement; subtract 1 from b
+	clf
+	add one, b
+	not one, one
+	clf
+	add one, b
+	not one, one
+	clf
+	cmp one, b
+	je .done
+	jmp .mult
+	
+.mult_by_zero:
+	xor a, a
+	
+.done:
+	# leave only the result in a for easy review
+	xor b, b
+	xor one, one
+	xor save, save
+	clf
+	
+	# mark the end of the program by jumping to the same place
+.end:
+	jmp .end

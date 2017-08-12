@@ -1,0 +1,68 @@
+# Stack example
+# You will see 0x0A, 0x0B, 0x0C, 0x0D, 0x0E stored to the bottom
+# of the memory. Then register a will be zeroed out and 0x0E, 0x0D, 0x0C,
+# 0x0B, 0x0A will be popped in it.
+%define a			r0
+%define counter		r1
+%define sp			r2	# the stack pointer
+%define one			r3
+%define start_val	0x0A
+%define repetitions 5
+
+	a = start_val
+	one = 1
+	counter = repetitions
+	sp = 0
+	
+	not sp, sp	# start the stack from 0xFF
+	
+	# push loop
+	loop
+		st sp, a	# store the value of a to the address in sp
+	
+		# subtract one from sp
+		# we can get away with one's complement here
+		not sp, sp
+		clf
+		add one, sp
+		not sp, sp
+
+		# subtract one from counter
+		# we can get away with one's complement here as well
+		not counter, counter
+		clf
+		add one, counter
+		not counter, counter
+		jz .continue
+		
+		# increase the value to store
+		clf
+		add one, a
+	endloop
+	
+.continue:
+	# zero out a, restore the counter
+	a = 0
+	counter = repetitions
+	
+	# pop loop
+	loop
+		clf
+		add one, sp
+		
+		# load a from the address in sp
+		ld sp, a
+		
+		# subtract one from counter
+		# one's complement again
+		not counter, counter
+		clf
+		add one, counter
+		not counter, counter
+		jz .end
+	endloop
+
+.end:
+	loop
+		# mark the end of the program by jumping in place
+	endloop

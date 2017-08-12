@@ -1,5 +1,5 @@
 /* preproc.c -- generic preprocessor implementation */
-/* ver.1.01 */
+/* ver. 1.021 */
 
 /* Performs textual substituion. */
 
@@ -38,14 +38,14 @@ typedef struct directive_ {
 // supported directives
 enum {DEFINE, NUM_DTVS};
 char * directives[NUM_DTVS] = {
-	"%define "						// %define works just like in C
+	"%define "						// %define works just like #define in C
 };
 
 char exenm[] = "preproc";			// internal executable name
-char ver[] = "v1.0";				// executable version
+char ver[] = "v1.021";				// executable version
 int lineno = 0;						// curret line number
-char input_buff[BUFF_SZ];			// the input buffer; lines are read in here
-char * inbuff_ptr;					// points to the current character in input_buff
+char input_buff[BUFF_SZ] = {NUL};	// the input buffer; lines are read in here
+char * inbuff_ptr = input_buff;		// points to the current character in input_buff
 CHTbl * drvs_htbl;					// a pointer to the hash table holding the directive strings
 FILE * infile, * outfile;			// input and output file pointers
 
@@ -120,10 +120,12 @@ int main(int argc, char * argv[])
 	read_line();
 	// no legal directives
 	if (DRV_START != *inbuff_ptr)
-	{			
+	{	
 		fclose(infile);
 		fclose(outfile);
+		chtbl_destroy(drvs_htbl);
 		remove(outfname);
+		free(outfname);
 		return -1;
 	}
 	
@@ -132,6 +134,7 @@ int main(int argc, char * argv[])
 	
 	fclose(outfile);
 	fclose(infile);
+	free(outfname);
 	chtbl_destroy(drvs_htbl);
 	return 0;
 }
@@ -308,7 +311,9 @@ char * read_word(void)
 	// get word
 	int i = 0;
 	while (!isspace(*inbuff_ptr) && 
-		   ',' != *inbuff_ptr && COMMENT != *inbuff_ptr)
+		   ',' != *inbuff_ptr && 
+		   COMMENT != *inbuff_ptr && 
+		   NUL != *inbuff_ptr)
 		str_wrd[i++] = *inbuff_ptr++;
 	
 	str_wrd[i] = NUL;

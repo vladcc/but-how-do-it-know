@@ -1,5 +1,5 @@
 /* display.c -- provides display functionality for the jcpvm */
-/* ver. 1.02 */
+/* ver. 1.03 */
 
 /* Creates a frame buffer and fills it with what
  * represents the current machine state of the jcpu. 
@@ -144,7 +144,11 @@ static void do_code(int last_instr)
 		last[strchr(last, '<') - last] = '\0';
 		sprintf(&frame[CODE_LINE - 1][0], "%s %8s", disasm_str[last_instr], " ");
 	}
-		
+	
+	// blank out last instruction line on reset
+	if (-1 == last_instr)
+		sprintf(&frame[CODE_LINE - 1][0], "%28s", " ");
+	
 	int row, nuls;
 	for (row = nuls = 0; row < INSTR_NUM; ++row)
 	{	

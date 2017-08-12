@@ -1,5 +1,5 @@
 /* preproc.h -- extension for the processed by preproc file */
-/* ver. 1.01 */
+/* ver. 1.021 */
 #ifndef PREPROC_H
 #define PREPROC_H
 #include "../os_def.h"

@@ -1,0 +1,39 @@
+# Multiplication by shift and addition
+%define mplier		3
+%define mplicand	4
+%define a			r0
+%define b			r1
+%define result		r2
+
+	data a, mplier
+	data b, mplicand
+	xor result, result	# zero out the result register
+	
+.start:
+	clf
+	shr a, a			# divide the multiplier by 2
+
+	jc .add_b_to_result	# add the multiplicand to the result if Carry flag is on
+	jmp .mult_b_by_2	# otherwise only multiply the multiplicand by 2
+
+.add_b_to_result:
+	clf
+	add b, result
+
+.mult_b_by_2:
+	clf
+	shl b, b
+	
+	or a, a				# check if we have any multiplier left
+	jz .reset_ab		# if not, we are done
+	jmp .start			# if yes, we start over
+
+.reset_ab:
+	# leave only a, b, and the result in the registers for easy review
+	clf
+	data a, mplier
+	data b, mplicand
+	
+	# mark the end of the program by jumping to the same place
+.end:
+	jmp .end
