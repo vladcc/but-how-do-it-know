@@ -26,7 +26,7 @@ they do. But still no explanation of how and why they do it.
 At around this time I found a book called "But how Do it Know?: The Basic Principles 
 of Computers for Everyone" by some guy named J Clark Scott. It promised that by the 
 end of it you would understand what a computer is and how it functions. People on the 
-internet seemed to agree that it delivered on this promise, so I was hooked.
+Internet seemed to agree that it delivered on this promise, so I was hooked.
 
 And guess what? It did. Big time. I'm not here to sell you anything, but if you want
 to know how computers work - read this book.
@@ -283,7 +283,7 @@ your target platform.
 
 makefile - the make script. Before you compile make sure you change the OS variable
 at the start to WIN or LIN accordingly. "make" or "make all" compiles the whole project. 
-You can compile the virtual machine, the processesor, the disassembler, the assembler, 
+You can compile the virtual machine, the preprocessor, the disassembler, the assembler, 
 and lang with "make vm", "make preproc", "make dis", "make asm", and "make lang" respectively.
 "make clean" removes all binary/object files. It does not touch anything inside /jcp/bin/
 
@@ -317,7 +317,7 @@ Also, I am very happy to announce that this project is now on the book's officia
 
 http://buthowdoitknow.com/
 
-Partircularly, you can find it here:
+Particularly, you can find it here:
 
 http://buthowdoitknow.com/virtual_machine.html
 
