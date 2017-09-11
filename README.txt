@@ -1,6 +1,14 @@
 # but-how-do-it-know
 Let's bring the Scott CPU to life. And program it.
 
+Content:
+
+I.	Introduction 		- line 12
+II. 	For the user 		- line 46
+III.	For the programmer	- line 261
+IV.	Conclusion		- line 312
+
+
 I. Introduction
 
 I got into programming the way most people do - one day I got curious,
