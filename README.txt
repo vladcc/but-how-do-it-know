@@ -298,3 +298,26 @@ examples and some old tests for the assembler.
 /jcp/lang/ - home of the lang compiler and its lexer.
 
 /jcp/preproc/ - home of the preprocessor.
+
+
+
+IV. Conclusion
+
+This information should be enough to get you started. If you have any suggestions, questions,
+or bug reports, please feel welcome to drop me a line.
+
+Also, I am very happy to announce that this project is now on the book's official website:
+
+http://buthowdoitknow.com/
+
+Partircularly, you can find it here:
+
+http://buthowdoitknow.com/virtual_machine.html
+
+Also, you don't want to miss the other CPU representations here:
+
+http://buthowdoitknow.com/get_excel.html
+
+and here:
+
+http://buthowdoitknow.com/cpu_model_intro.html
