@@ -23,8 +23,8 @@ then another... Found out about control units, and ALUs, and
 registers, and fetch-execute cycles. Learned what all the parts are and what 
 they do. But still no explanation of how and why they do it.
 
-At around this time I found a book called "But how Do it Know?: The Basic Principles 
-of Computers for Everyone" by some guy named J Clark Scott. It promised that by the 
+At around this time I came across a book called "But how Do it Know?: The Basic Principles 
+of Computers for Everyone" by a guy named J Clark Scott. It promised that by the 
 end of it you would understand what a computer is and how it functions. People on the 
 Internet seemed to agree that it delivered on this promise, so I was hooked.
 
