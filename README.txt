@@ -13,7 +13,7 @@ I. Introduction
 I got into programming the way most people do - one day I got curious,
 found a tutorial, learned about variables, functions, if-s, and loops.
 It was easy to get information on how to make a working program. But
-there was seem to be next to no information on how and why exactly
+there seemed to be next to no information on how and why exactly
 did it work. How did the computer work?
 
 If you are anything like me, you have wondered that yourself. A lot.
