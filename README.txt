@@ -2,11 +2,10 @@
 Let's bring the Scott CPU to life. And program it.
 
 Content:
-
-I.	Introduction 		- line 12
-II. 	For the user 		- line 46
-III.	For the programmer	- line 261
-IV.	Conclusion		- line 312
+I.	Introduction 		- line 11
+II. 	For the user 		- line 45
+III.	For the programmer	- line 260
+IV.	Conclusion		- line 311
 
 
 I. Introduction
