@@ -83,9 +83,9 @@ Quit                         - q + enter
 ---------------------------------------------------------------
 
 
-2. jcpasm - the assembler. Compiles the assembly instructions to binary.
-Runs the preprocessor first, if available.
-Note: jcpasm, preproc, and lang should be in the same directory.
+2. jcpasm - the assembler. Compiles the assembly instructions to binary. Runs the preprocessor first, if available.
+Note: jcpasm, preproc, and lang should be in the same directory. jcpasm and lang are not case sensitive.
+All source code is transformed to uppercase and displayed as such in the error messages.
 
 Instruction set:
 
