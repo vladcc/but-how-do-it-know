@@ -4,8 +4,8 @@ Let's bring the Scott CPU to life. And program it.
 Content:
 I.	Introduction 		- line 11
 II. 	For the user 		- line 45
-III.	For the programmer	- line 260
-IV.	Conclusion		- line 311
+III.	For the programmer	- line 261
+IV.	Conclusion		- line 312
 
 
 I. Introduction
@@ -83,9 +83,10 @@ Quit                         - q + enter
 ---------------------------------------------------------------
 
 
-2. jcpasm - the assembler. Compiles the assembly instructions to binary. Runs the preprocessor first, if available.
-Note: jcpasm, preproc, and lang should be in the same directory. jcpasm and lang are not case sensitive.
-All source code is transformed to uppercase and displayed as such in the error messages.
+2. jcpasm - the assembler. Compiles the assembly instructions to binary. Runs the preprocessor
+first, if available.
+Note: jcpasm, preproc, and lang should be in the same directory. jcpasm and lang are not case 
+sensitive. All source code is transformed to uppercase and displayed as such in the error messages.
 
 Instruction set:
 
