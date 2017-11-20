@@ -38,7 +38,7 @@ enough to work. The language of the book is simple. The only prerequisite you ne
 is English.
 
 After I read the book I decided that it'd be really fun to emulate the CPU, get
-a way to program it and see it work. That's how this little project came to be.
+a way to program it and see it work. That's how this project came to be.
 
 
 
