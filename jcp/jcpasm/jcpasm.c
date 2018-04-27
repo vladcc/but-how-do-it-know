@@ -183,6 +183,12 @@ int main(int argc, char * argv[])
 				 * if a label is after a jump, parse_label() is called from parse_instr() */
 				parse_label(LBL_ADDR);
 				break;
+			case TOK_LITERAL:
+				/* a literal here (outside of any instruction) is useful for setting specific
+				 * bytes in memory, i.e. in a DATA section */
+				parse_address();
+				++all_size;
+				break;
 			default:
 				fprintf(stderr, "%s: ", exenm), fprintf(stderr, "Err: line %d: ", curr_lineno);
 				fprintf(stderr, "something not an instruction, address, or register < %s >\n",
@@ -287,7 +293,10 @@ void parse_instr(void)
 				// get RB
 				binary[all_size] |= parse_register();
 				++all_size;
-				parse_address();
+				if (Lexer.Current() == TOK_LITERAL)
+					parse_address();
+				else
+					parse_label(LBL_JUMP);
 				break;
 			default:
 				// get RA
