@@ -1,0 +1,69 @@
+# A program that multiplies 2 numbers: x * y -> z
+# The x and y are 8 bit numbers, the z is a 16 bit number
+# Program is written for J Clark Scotts' imaginary microprocessor from
+# the book "But how do it know?" (If you haven't yet, READ IT!!!!)
+# To be compiled using Vladimir Dinev's jcpasm program (with label extensions)
+# author: de2Zotjes
+
+                JMP     .PROGRAM                                             #00
+.DATA:
+    .LX:        0x73                # 8BIT X (0X73)                          #02
+    .LY:        0x12                # 8BIT Y (0X12)                          #03
+    .REPEAT:    0x01                # TO REPEAT 8 TIMES                      #04
+    .MZ:        0x00                # MSB 16BIT Z                            #05
+    .LZ:        0x00                # LSB 16BIT Z                            #06
+    .MX:        0x00                # MSB 16BIT X (HELPER)                   #07
+.ENDDATA:
+
+.PROGRAM:
+    .START:     DATA    R3, .REPEAT # LOAD MEM ADDRESS REPEAT                #08
+                LD      R3, R0      # LOAD REPEAT IN R0                      #0A
+                SHL     R0, R0      # SHIFT LEFT, AFTER 8 SHR CARRY GOES ON  #0B
+                JC      .COMPLETE   # IF THE CARRY IS ON 8 LOOPS COMPLETED   #0C
+                ST      R3, R0      # STORE REPEAT TO MEMORY                 #0E
+                DATA    R3, .LY     # LOAD MEM ADDRESS Y                     #0F
+                LD      R3, R0      # LOAD Y IN R0                           #11
+                SHR     R0, R0      # SHIFT RIGHT, IF THE LSB IS 1 CRY SET   #12
+                ST      R3, R0      # STORE Y TO MEMORY                      #13
+                JC      .BITY       # CARRY SET?                             #14
+                JMP     .NOBITY     # CARRY NOT SET, JUMP BEYOND ADDITION    #16
+    .BITY:      CLF                 # DO ADDITION                            #18
+                DATA    R3, 02      # LOAD MEM ADDRESS X                     #19
+                LD      R3, R0      # LOAD X IN R0                           #1B
+                DATA    R3, .LZ     # LOAD MEM ADDRESS Z                     #1C
+                LD      R3, R1      # LOAD Z IN R1                           #1E
+                ADD     R0, R1      # ADD X AND Z, STORE TO Z                #1F
+                ST      R3, R1      # STORE Z TO MEMORY                      #20
+                DATA    R3, .MX     # LOAD MEM ADDRESS MX                    #21
+                LD      R3, R0      # LOAD MX TO R0                          #23
+                DATA    R3, .MZ     # LOAD MEM ADDRESS MZ                    #24
+                LD      R3, R1      # LOAD MZ TO R1                          #26
+                JC      .CXPLUSZ    # LOWERBITS ADD CARRY SET                #27
+                JMP     .NOCXPLUSZ  # NO CARRY SET                           #29
+    .CXPLUSZ:   CLF                 # CARRY WAS ON IN LB, MUST ADD TO MB     #2B
+                DATA    R2, 1       # LOAD 1 IN R2                           #2C
+                ADD     R2, R1      # ADD 1 AND MZ, STORE TO MZ              #2E
+    .NOCXPLUSZ: CLF                                                          #2F
+                ADD     R0, R1      # ADD MX AND MZ, STORE TO MZ             #30
+                ST      R3, R1      # STORE MZ TO MEMORY                     #31
+    .NOBITY:    CLF                 # NO ADD, JUST CONTINUE WITH SHL X       #32
+                DATA    R3, .LX     # LOAD MEM ADDRESS X                     #33
+                LD      R3, R0      # LOAD X IN R0                           #35
+                DATA    R3, .MX     # LOAD MEM ADDRESS MX                    #36
+                LD      R3, R1      # LOAD MX IN R1                          #38
+                DATA    R2, 1       # LOAD 1 IN R2                           #39
+                SHL     R0, R0                                               #3B
+                JC      .CXSHL      # MSB X WAS 1, MUST TRANSFER TO MX       #3C
+                DATA    R2, 0       # MSB X WAS 0, CLEAR THE TRANSFER        #3E
+    .CXSHL:     CLF                                                          #40
+                SHL     R1, R1                                               #41
+                CLF                                                          #42
+                ADD     R2, R1      # CARRY OF X ADDED HERE                  #43
+                CLF                                                          #44
+                DATA    R3, .LX     # LOAD MEM ADDRESS X                     #45
+                ST      R3, R0      # STORE X TO MEMORY                      #47
+                DATA    R3, .MX     # LOAD MEM ADDRESS MX                    #48
+                ST      R3, R1      # STORE MX TO MEMORY                     #4A
+                JMP     .START      # NEXT ITERATION                         #4B
+    .COMPLETE:  JMP     .COMPLETE   # 8 LOOPS DONE                           #4D
+                                                                             #4F
