@@ -1,8 +1,3 @@
-# Compile for Windows(default)/Linux
-WIN=Windows
-LIN=Linux
-OS=$(WIN)
-
 # Compiler
 CC=gcc
 CFLAGS=-s -Wall
@@ -11,7 +6,7 @@ CFLAGS=-s -Wall
 JCPU=jcpu
 MCODE=mach_code
 
-ifeq ($(OS),$(WIN))
+ifeq ($(OS),Windows_NT)
 EXEC=.exe
 else
 EXEC=.bin
