@@ -1,0 +1,47 @@
+# 0 --> 100, where to store `result`
+%define counter R0
+# counts 0 --> 3, resets at 3
+%define fizz_counter R1
+# counts 0 --> 5, resets at 5
+%define buzz_counter R2
+	DATA R0, 64 # store at unused space
+.loop:
+	DATA R3, 3 # check if fizz
+	CMP fizz_counter, R3
+	JE .fizz
+	JMP .nfizz
+	.fizz:
+		DATA R3, 5 # check if fizzbuzz
+		XOR fizz_counter, fizz_counter
+		CMP buzz_counter, R3
+		JE .buzz1
+		JMP .nbuzz1
+		.buzz1:
+			XOR buzz_counter, buzz_counter
+			DATA R3, 3
+			JMP .endif
+		.nbuzz1:
+			DATA R3, 1
+		.endif:
+		ST counter, R3
+	.nfizz:
+	DATA R3, 5 # check if buzz
+	CMP buzz_counter, R3
+	JE .buzz2
+	JMP .nbuzz2
+	.buzz2:
+		DATA R3, 2
+		ST counter, R3
+		XOR buzz_counter, buzz_counter
+	.nbuzz2:
+	DATA R3, 1
+	CLF
+	ADD R3,      counter
+	ADD R3, fizz_counter
+	ADD R3, buzz_counter
+	DATA R3, 164 # "exit" at 100 passes
+	CMP counter, R3
+	JE .end
+	JMP .loop # else continue
+.end:
+	JMP .end
