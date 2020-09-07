@@ -50,7 +50,7 @@
 	JMP .do
 .end:
 	JMP .end
-#.data: - 52
+#.data: - 52, numbers to sort
 # 2, 1, 4, 6, 9, 5, 0, 7, 3, 8
 LD R0, R2 # 2
 LD R0, R1 # 1
