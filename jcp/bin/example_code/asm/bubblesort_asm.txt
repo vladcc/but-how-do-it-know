@@ -1,0 +1,64 @@
+# bubble sort
+# variables: nrswps(number of swaps), x, y, tmp, i
+# registers: 4 (R0-R3)
+# nrswps: stored in ram at 0xF0
+#v number of swaps
+%define &nrswaps 0xF0
+#v i-1
+%define &imnsone 0xF1
+%define i R0
+%define x R1
+%define y R2
+%define tmp R3
+.do:
+	DATA tmp, 0
+	DATA R2, &nrswaps
+	ST R2, tmp
+	DATA i, 52 # .data
+	.for:
+		DATA tmp, &imnsone # save i for later use (no built-in substract)
+		ST tmp, i
+		LD i, x # x = *i
+		DATA tmp, 1 # i++
+		ADD tmp, i
+		LD i, y
+		CMP x, y # if(x > y)
+		JA .swap 
+		JMP .endswap
+		.swap: # {
+			ST i, x
+			DATA tmp, &imnsone
+			LD tmp, i
+			ST i, y
+			DATA tmp, 1 # i++
+			ADD tmp, i
+			DATA R1, &nrswaps # *(r1=&nrswaps) = ((r2=*&nrswaps)+=tmp/*1*/)
+			LD R1, R2 # that is, nrswaps++
+			ADD tmp, R2
+			ST R1, R2
+		.endswap: # }
+		DATA tmp, 62 # (.data + 10)
+		CMP i, tmp # if(i>(&data[0]+10)) break .for;
+		JE .endfor
+		JMP .for
+	.endfor:
+	DATA tmp, &nrswaps
+	LD tmp, R1
+	DATA tmp, 0
+	CMP R1, tmp
+	JE .end
+	JMP .do
+.end:
+	JMP .end
+#.data: - 52, numbers to sort
+# 2, 1, 4, 6, 9, 5, 0, 7, 3, 8
+LD R0, R2 # 2
+LD R0, R1 # 1
+LD R1, R0 # 4
+LD R1, R2 # 6
+LD R2, R1 # 9
+LD R1, R1 # 5
+LD R0, R0 # 0
+LD R1, R3 # 7
+LD R0, R3 # 3
+LD R2, R0 # 8

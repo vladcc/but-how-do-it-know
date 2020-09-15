@@ -1,0 +1,20 @@
+%define counter R0
+%define first R1
+%define second R2
+%define temp R3
+	DATA counter, 64 # only first 13 results make sense. sad.
+	DATA first, 1
+.loop:
+	ADD second, first # first round
+	ST counter, first
+	DATA temp, 1 # prepare for next round
+	ADD temp, counter
+	ADD first, second # second round
+	ST counter, second
+	ADD temp, counter # prepare for next round
+	DATA temp, 164 # should continue? (counter < 100 [+offset])
+	CMP counter, temp
+	JE .end
+	JMP .loop
+.end:
+	JMP .end
